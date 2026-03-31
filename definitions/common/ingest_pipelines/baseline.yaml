@@ -1,0 +1,6 @@
+description: baseline pipeline
+
+processors:
+  - set:
+      field: foo
+      value: bar

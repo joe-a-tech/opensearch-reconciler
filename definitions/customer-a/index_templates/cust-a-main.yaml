@@ -1,0 +1,29 @@
+index_patterns:
+  - "cust-a-logs-*"
+
+template:
+  settings:
+    number_of_shards: 1
+    number_of_replicas: 0
+
+  mappings:
+    properties:
+      "@timestamp":
+        type: date
+
+      message:
+        type: text
+
+      level:
+        type: text
+
+      service:
+        type: keyword
+
+      host:
+        type: keyword
+
+  aliases: {}
+
+priority: 100
+data_stream: {}

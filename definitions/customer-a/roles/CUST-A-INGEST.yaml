@@ -1,0 +1,9 @@
+cluster_permissions:
+  - cluster_composite_ops_ro
+
+index_permissions:
+  - index_patterns:
+      - "cust-a-*"
+    allowed_actions:
+      - write
+      - read
