@@ -148,3 +148,48 @@ def first_diff(desired: Any, actual: Any, path: Optional[List[str]] = None) -> O
         )
 
     return None
+
+
+def flatten_index_settings(settings: Dict[str, Any]) -> Dict[str, Any]:
+    settings = copy.deepcopy(settings)
+    index_block = settings.get("index")
+
+    if isinstance(index_block, dict):
+        for key, value in index_block.items():
+            settings.setdefault(key, value)
+        settings.pop("index", None)
+
+    return settings
+
+
+def normalise_index_setting_scalars(data: Any) -> Any:
+    if isinstance(data, dict):
+        return {k: normalise_index_setting_scalars(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [normalise_index_setting_scalars(v) for v in data]
+    if isinstance(data, bool):
+        return "true" if data else "false"
+    if isinstance(data, int):
+        return str(data)
+    return data
+
+
+def normalise_ism_policy_defaults(data: Any) -> Any:
+    if isinstance(data, dict):
+        data = {k: normalise_ism_policy_defaults(v) for k, v in data.items()}
+
+        retry = data.get("retry")
+        if isinstance(retry, dict):
+            if retry == {
+                "count": 3,
+                "backoff": "exponential",
+                "delay": "1m",
+            }:
+                data.pop("retry", None)
+
+        return data
+
+    if isinstance(data, list):
+        return [normalise_ism_policy_defaults(v) for v in data]
+
+    return data

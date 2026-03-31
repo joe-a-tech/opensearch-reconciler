@@ -5,32 +5,14 @@ from typing import Any, Dict, Optional
 
 from ..api import OpenSearchAPI
 from ..models import ManagedObject
-from ..utils import strip_reconciler_marker, comparable, is_reserved_or_static
+from ..utils import (
+    comparable,
+    flatten_index_settings,
+    is_reserved_or_static,
+    normalise_index_setting_scalars,
+    strip_reconciler_marker,
+)
 from .base import BaseReconciler
-
-
-def flatten_index_settings(settings: Dict[str, Any]) -> Dict[str, Any]:
-    settings = copy.deepcopy(settings)
-    index_block = settings.get("index")
-
-    if isinstance(index_block, dict):
-        for key, value in index_block.items():
-            settings.setdefault(key, value)
-        settings.pop("index", None)
-
-    return settings
-
-
-def normalise_index_setting_scalars(data: Any) -> Any:
-    if isinstance(data, dict):
-        return {k: normalise_index_setting_scalars(v) for k, v in data.items()}
-    if isinstance(data, list):
-        return [normalise_index_setting_scalars(v) for v in data]
-    if isinstance(data, bool):
-        return "true" if data else "false"
-    if isinstance(data, int):
-        return str(data)
-    return data
 
 
 class IndexTemplateReconciler(BaseReconciler):

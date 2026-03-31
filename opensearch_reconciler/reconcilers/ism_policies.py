@@ -5,29 +5,8 @@ from typing import Any, Dict, Optional
 
 from ..api import OpenSearchAPI
 from ..models import ManagedObject
-from ..utils import ReconcileError, comparable, strip_reconciler_marker
+from ..utils import ReconcileError, comparable, normalise_ism_policy_defaults, strip_reconciler_marker
 from .base import BaseReconciler
-
-
-def normalise_ism_policy_defaults(data: Any) -> Any:
-    if isinstance(data, dict):
-        data = {k: normalise_ism_policy_defaults(v) for k, v in data.items()}
-
-        retry = data.get("retry")
-        if isinstance(retry, dict):
-            if retry == {
-                "count": 3,
-                "backoff": "exponential",
-                "delay": "1m",
-            }:
-                data.pop("retry", None)
-
-        return data
-
-    if isinstance(data, list):
-        return [normalise_ism_policy_defaults(v) for v in data]
-
-    return data
 
 
 class ISMPolicyReconciler(BaseReconciler):
