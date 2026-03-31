@@ -75,6 +75,10 @@ def main() -> int:
     args = parser.parse_args()
     setup_logging(args.verbose)
 
+    LOG.info("Command=%s", args.command)
+    if args.customer:
+        LOG.info("Customer filter=%s", args.customer)
+
     try:
         definitions_dir = Path(args.definitions_dir)
         verify = parse_verify(args.verify)
