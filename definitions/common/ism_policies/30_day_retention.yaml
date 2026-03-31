@@ -4,7 +4,7 @@ default_state: hot
 
 ism_template:
   - index_patterns:
-      - cust-a-main*
+      - cust-a-main_*
     priority: 100
 
 states:
