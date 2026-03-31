@@ -1,6 +1,9 @@
 index_patterns:
   - "cust-a-logs-*"
 
+composed_of:
+  - "base-logs"
+
 template:
   settings:
     number_of_shards: 1
