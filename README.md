@@ -1,3 +1,4 @@
+
 # OpenSearch Reconciler
 
 A small Python-based OpenSearch reconciler that treats a local Git repository as the source of truth for selected OpenSearch objects.
@@ -259,6 +260,85 @@ python -m opensearch_reconciler.cli plan --definitions-dir ./definitions
 ```
 
 ---
+
+## Deployment on an OpenSearch host
+
+A typical production deployment is:
+
+1. clone or pull the reconciler code repo onto the host
+2. create a Python virtual environment once
+3. install requirements into that virtual environment
+4. clone or pull the definitions repo onto the host
+5. run the reconciler from cron or a systemd timer using the virtual environment's Python
+
+Using a virtual environment is recommended instead of installing Python packages globally.
+
+Benefits:
+
+* keeps dependencies isolated from the system Python
+* makes upgrades safer and more predictable
+* avoids polluting the host with global pip installs
+
+### First-time setup
+
+Example first-time setup on the OpenSearch host:
+
+```bash
+cd /opt/opensearch-reconciler
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+deactivate
+```
+
+After that, the reconciler can be run by calling the virtual environment's Python directly:
+
+```bash
+cd /opt/opensearch-reconciler
+/opt/opensearch-reconciler/.venv/bin/python -m opensearch_reconciler.cli plan \
+  --definitions-dir /opt/opensearch-definitions \
+  --base-url https://localhost:9200 \
+  --client-cert /path/to/admin.pem \
+  --client-key /path/to/admin-key.pem \
+  --verify /path/to/root-ca.pem
+```
+
+### Cron example
+
+Example cron entry:
+
+```cron
+*/5 * * * * cd /opt/opensearch-reconciler && /opt/opensearch-reconciler/.venv/bin/python -m opensearch_reconciler.cli apply --definitions-dir /opt/opensearch-definitions --base-url https://localhost:9200 --client-cert /path/to/admin.pem --client-key /path/to/admin-key.pem --verify /path/to/root-ca.pem >> /var/log/opensearch-reconciler.log 2>&1
+```
+
+### Updating the virtual environment
+
+The virtual environment usually only needs updating when:
+
+* the reconciler code changes in a way that adds or changes Python dependencies
+* `requirements.txt` changes
+* Python on the host is upgraded and you want to rebuild the environment cleanly
+
+A simple update flow is:
+
+```bash
+cd /opt/opensearch-reconciler
+source .venv/bin/activate
+pip install -r requirements.txt
+ deactivate
+```
+
+### Optional bootstrap script
+
+You can also add a small bootstrap script for first deploys or upgrades.
+
+Typical behaviour:
+
+* create `.venv` if it does not exist
+* install or update requirements
+* optionally run a quick `plan` test
+
+That is useful for manual deployment or configuration management, but the scheduled job itself should normally just use the existing virtual environment rather than recreating it on every run.
 
 ## Authentication
 
