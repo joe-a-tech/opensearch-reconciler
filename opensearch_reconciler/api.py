@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
 import requests
@@ -26,9 +27,9 @@ class OpenSearchAPI:
         base_url: str,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        verify: bool | str = True,
-        client_cert: Optional[str] = None,
-        client_key: Optional[str] = None,
+        verify: bool | str | Path = True,
+        client_cert: Optional[str | Path] = None,
+        client_key: Optional[str | Path] = None,
         timeout: int = 30,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -50,12 +51,15 @@ class OpenSearchAPI:
         if username is not None:
             self.session.auth = (username, password or "")
 
-        self.verify = verify
+        self.verify = str(verify) if isinstance(verify, Path) else verify
+
         self.cert = None
         if client_cert and client_key:
-            self.cert = (client_cert, client_key)
+            cert_value = str(client_cert) if isinstance(client_cert, Path) else client_cert
+            key_value = str(client_key) if isinstance(client_key, Path) else client_key
+            self.cert = (cert_value, key_value)
         elif client_cert:
-            self.cert = client_cert
+            self.cert = str(client_cert) if isinstance(client_cert, Path) else client_cert
 
         self.session.headers.update({"Content-Type": "application/json"})
 
@@ -94,10 +98,14 @@ class OpenSearchAPI:
         resp = self.request("PUT", path, expected=expected, data=json.dumps(payload))
         return resp.json() if resp.text.strip() else {}
 
+    def post_json(self, path: str, payload: Dict[str, Any], expected: Iterable[int] = (200, 201)) -> Dict[str, Any]:
+        resp = self.request("POST", path, expected=expected, data=json.dumps(payload))
+        return resp.json() if resp.text.strip() else {}
+
     def delete(self, path: str, expected: Iterable[int] = (200, 202)) -> Dict[str, Any]:
         resp = self.request("DELETE", path, expected=expected)
         return resp.json() if resp.text.strip() else {}
-    
+
     def head(self, path: str, expected: Iterable[int] = (200, 404)) -> int:
         resp = self.request("HEAD", path, expected=expected)
-        return resp.status_code    
+        return resp.status_code

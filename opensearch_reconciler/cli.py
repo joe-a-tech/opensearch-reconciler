@@ -28,13 +28,13 @@ def env_default(name: str, default: Optional[str] = None) -> Optional[str]:
     return value if value not in (None, "") else default
 
 
-def parse_verify(value: str) -> bool | str:
+def parse_verify(value: str) -> bool | Path:
     lowered = value.strip().lower()
     if lowered in {"true", "yes", "1"}:
         return True
     if lowered in {"false", "no", "0"}:
         return False
-    return value
+    return Path(value)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -76,14 +76,19 @@ def main() -> int:
     setup_logging(args.verbose)
 
     try:
-        desired_state = load_desired_state(Path(args.definitions_dir))
+        definitions_dir = Path(args.definitions_dir)
+        verify = parse_verify(args.verify)
+        client_cert = Path(args.client_cert) if args.client_cert else None
+        client_key = Path(args.client_key) if args.client_key else None
+
+        desired_state = load_desired_state(definitions_dir)
         api = OpenSearchAPI(
             base_url=args.base_url,
             username=args.username,
             password=args.password,
-            verify=parse_verify(args.verify),
-            client_cert=args.client_cert,
-            client_key=args.client_key,
+            verify=verify,
+            client_cert=client_cert,
+            client_key=client_key,
             timeout=args.timeout,
         )
 
